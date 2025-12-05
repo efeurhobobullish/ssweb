@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/playwright:v1.44.0-jammy
 
 # Set timezone
-ENV TZ=Asia/Jakarta
+ENV TZ=Africa/Lagos
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 WORKDIR /app
