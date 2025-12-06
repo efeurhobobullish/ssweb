@@ -14,7 +14,7 @@ app.get('/sswebvid', async (req, res) => {
   const browser = await chromium.launch();
   const context = await browser.newContext({
     recordVideo: {
-      dir: '/tmp',
+      dir: TEMP_DIR,
       size: { width: 1280, height: 720 }
     }
   });
@@ -23,21 +23,26 @@ app.get('/sswebvid', async (req, res) => {
 
   try {
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 35000 });
-    await page.waitForTimeout(15000);
-    const videoPath = await page.video().path();
+    await page.waitForTimeout(15000); // record 15 seconds
 
-    await browser.close();
+    const video = page.video();
+
+    await page.close();      // Close the page
+    await context.close();   // Close the context (this finalizes video)
+    await browser.close();   // Now safe to close browser
+
+    const videoPath = await video.path(); // Now the video is saved!
 
     res.setHeader('Content-Type', 'video/mp4');
     const stream = fs.createReadStream(videoPath);
     stream.pipe(res);
-    stream.on('end', () => fs.unlink(videoPath, () => {})); 
+    stream.on('close', () => fs.unlink(videoPath, () => {}));
+
   } catch (err) {
     await browser.close();
     res.status(500).send('Gagal rekam video: ' + err.message);
   }
 });
-
 
 app.get('/ssweb', async (req, res) => {
   const url = req.query.url;
